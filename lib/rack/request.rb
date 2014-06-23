@@ -325,11 +325,6 @@ module Rack
 
       forwarded_ips = @env['HTTP_X_FORWARDED_FOR'] ? @env['HTTP_X_FORWARDED_FOR'].strip.split(/[,\s]+/) : []
 
-      if client_ip = @env['HTTP_CLIENT_IP']
-        # If forwarded_ips doesn't include the client_ip, it might be an
-        # ip spoofing attempt, so we ignore HTTP_CLIENT_IP
-        return client_ip if forwarded_ips.include?(client_ip)
-      end
 
       return forwarded_ips.reject { |ip| trusted_proxy?(ip) }.last || @env["REMOTE_ADDR"]
     end
