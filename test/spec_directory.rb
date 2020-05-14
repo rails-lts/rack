@@ -49,6 +49,18 @@ describe Rack::Directory do
     res.should.be.forbidden
   end
 
+  should "not allow dir globs" do
+    Dir.mktmpdir do |dir|
+      weirds = "uploads/.?/.?"
+      full_dir = File.join(dir, weirds)
+      FileUtils.mkdir_p full_dir
+      FileUtils.touch File.join(dir, "secret.txt")
+      app = Rack::Directory.new(File.join(dir, "uploads"))
+      res = Rack::MockRequest.new(app).get("/.%3F")
+      res.body.should.not.include "secret.txt"
+    end
+  end
+
   should "404 if it can't find the file" do
     res = Rack::MockRequest.new(Rack::Lint.new(app)).
       get("/cgi/blubb")
