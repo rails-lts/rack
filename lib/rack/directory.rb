@@ -84,7 +84,7 @@ table { width:100%%; }
       end
 
       Dir.entries(@path).reject { |e| e.start_with?('.') }.sort.each do |node|
-        stat = stat(node)
+        stat = stat(F.join(@path, node))
         next  unless stat
         basename = F.basename(node)
         ext = F.extname(node)

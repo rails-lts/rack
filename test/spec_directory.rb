@@ -55,8 +55,8 @@ describe Rack::Directory do
       full_dir = File.join(dir, weirds)
       FileUtils.mkdir_p full_dir
       FileUtils.touch File.join(dir, "secret.txt")
-      app = Rack::Directory.new(File.join(dir, "uploads"))
-      res = Rack::MockRequest.new(app).get("/.%3F")
+      second_app = Rack::Directory.new(File.join(dir, "uploads"))
+      res = Rack::MockRequest.new(second_app).get("/.%3F")
       res.body.should.not.include "secret.txt"
     end
   end
