@@ -11,10 +11,10 @@ which all Rack applications should conform to.
 
 == LTS version
 
-This is a fork of the official {rack gem}[https://github.com/rack/rack] with backportet security fixes for:
+This is a fork of the official {rack gem}[https://github.com/rack/rack] with backported security fixes for:
 
-* {rack 1.6}[https://github.com/rails-lts/rack/tree/lts-1-6-stable] (CVE-2020-8161)
-* {rack 1.4}[https://github.com/rails-lts/rack/tree/lts-rack-1.4] (CVE-2018-16471, CVE-2020-8161)
+* {rack 1.6}[https://github.com/rails-lts/rack/tree/lts-1-6-stable] (CVE-2020-8161, CVE-2020-8184)
+* {rack 1.4}[https://github.com/rails-lts/rack/tree/lts-rack-1.4] (CVE-2018-16471, CVE-2020-8161, CVE-2020-8184)
 
 To use it, you need to add it to the Gemfile like this:
 
