@@ -440,6 +440,26 @@ describe Rack::Request do
     })
   end
 
+  # This has changed in newer Rack versions (sanity check for backports)
+  should "ignore empty cookie pairs" do
+    req = Rack::Request.new \
+      Rack::MockRequest.env_for("", "HTTP_COOKIE" => "foo=bar;;quux=h&m")
+    req.cookies.should.equal "foo" => "bar", "quux" => "h&m"
+  end
+
+  # This has changed in newer Rack versions (sanity check for backports)
+  should "support a comma as cookie separator" do
+    req = Rack::Request.new \
+      Rack::MockRequest.env_for("", "HTTP_COOKIE" => "foo=bar,quux=h&m")
+    req.cookies.should.equal "foo" => "bar", "quux" => "h&m"
+  end
+
+  should "disallow percent-encoded cookies to overwrite existing prefixed cookie names" do
+    req = Rack::Request.new \
+      Rack::MockRequest.env_for("", "HTTP_COOKIE" => "%66oo=baz;foo=bar")
+    req.cookies.should.equal "%66oo" => "baz", "foo" => "bar"
+  end
+
   should "provide setters" do
     req = Rack::Request.new(e=Rack::MockRequest.env_for(""))
     req.script_name.should.equal ""
