@@ -1,73 +1,79 @@
 # frozen_string_literal: true
 
-require 'minitest/global_expectations/autorun'
 require 'rack/session/abstract/id'
 
 describe Rack::Session::Abstract::PersistedSecure::SecureSessionHash do
-  attr_reader :hash
 
-  def setup
-    super
-    @store = Class.new do
+  def store
+    Class.new do
       def load_session(req)
-        [Rack::Session::SessionId.new("id"), { foo: :bar, baz: :qux }]
+        [Rack::Session::SessionId.new("id"), { :foo => :bar, :baz => :qux }]
       end
       def session_exists?(req)
         true
       end
     end
-    @hash = Rack::Session::Abstract::PersistedSecure::SecureSessionHash.new(@store.new, nil)
+  end
+
+  def hash
+    hash = Rack::Session::Abstract::PersistedSecure::SecureSessionHash.new(store.new, nil)
+
+    # This is a bug fixed in 4fd82e8563a860029edc531500bd509720479e82 in newer versions of Rack
+    hash.send(:load_for_read!)
+
+    hash
   end
 
   it "returns keys" do
-    assert_equal ["foo", "baz"], hash.keys
+    hash.keys.sort.should.equal ["baz", "foo"]
   end
 
   it "returns values" do
-    assert_equal [:bar, :qux], hash.values
+    hash.values.sort_by(&:to_s).should.equal [:bar, :qux]
   end
 
   describe "#[]" do
     it "returns value for a matching key" do
-      assert_equal :bar, hash[:foo]
+      hash[:foo].should.equal :bar
     end
 
     it "returns value for a 'session_id' key" do
-      assert_equal "id", hash['session_id']
+      hash['session_id'].should.equal "id"
     end
 
     it "returns nil value for missing 'session_id' key" do
-      store = @store.new
-      def store.load_session(req)
+      store_instance = store.new
+      def store_instance.load_session(req)
         [nil, {}]
       end
-      @hash = Rack::Session::Abstract::PersistedSecure::SecureSessionHash.new(store, nil)
-      assert_nil hash['session_id']
+      other_hash = Rack::Session::Abstract::PersistedSecure::SecureSessionHash.new(store_instance, nil)
+      other_hash['session_id'].should.equal nil
     end
   end
 
   describe "#fetch" do
     it "returns value for a matching key" do
-      assert_equal :bar, hash.fetch(:foo)
+      hash.fetch(:foo).should.equal :bar
     end
 
-    it "works with a default value" do
-      assert_equal :default, hash.fetch(:unknown, :default)
-    end
-
-    it "works with a block" do
-      assert_equal :default, hash.fetch(:unkown) { :default }
-    end
-
-    it "it raises when fetching unknown keys without defaults" do
-      lambda { hash.fetch(:unknown) }.must_raise KeyError
-    end
+    # This is only available in newer versions of Rack
+    #
+    # it "works with a default value" do
+    #   hash.fetch(:unknown, :default).should.equal :default
+    # end
+    #
+    # it "works with a block" do
+    #   hash.fetch(:unkown) { :default }.should.equal :default
+    # end
+    #
+    # it "it raises when fetching unknown keys without defaults" do
+    #   lambda { hash.fetch(:unknown) }.should.raise(KeyError)
+    # end
   end
 
   describe "#stringify_keys" do
     it "returns hash or session hash with keys stringified" do
-      assert_equal({ "foo" => :bar, "baz" => :qux }, hash.send(:stringify_keys, hash).to_h)
+      hash.send(:stringify_keys, hash).should.equal({ "foo" => :bar, "baz" => :qux })
     end
   end
 end
-
