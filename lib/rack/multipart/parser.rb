@@ -159,8 +159,9 @@ module Rack
         when RFC2183
           filename = Hash[head.scan(DISPPARM)]['filename']
           filename = $1 if filename and filename =~ /^"(.*)"$/
-        when BROKEN_QUOTED, BROKEN_UNQUOTED
+        when BROKEN
           filename = $1
+          filename = $1 if filename =~ /^"(.*)"$/
         end
 
         return unless filename
