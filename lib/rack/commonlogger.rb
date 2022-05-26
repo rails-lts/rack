@@ -54,7 +54,10 @@ module Rack
         length,
         now - began_at ]
 
+      msg.gsub!(/[^[:print:]\n]/) { |c| "\\x%02x" % [c.ord] }
+
       logger = @logger || env['rack.errors']
+
       # Standard library logger doesn't support write but it supports << which actually
       # calls to write on the log device without formatting
       if logger.respond_to?(:write)

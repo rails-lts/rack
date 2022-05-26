@@ -98,6 +98,11 @@ describe Rack::Lint do
       message.should.match(/REQUEST_METHOD/)
 
     lambda {
+      Rack::Lint.new(nil).call(env("REQUEST_METHOD" => "OOPS?\b!"))
+    }.should.raise(Rack::Lint::LintError).
+      message.should.match(/OOPS\?\\/)
+
+    lambda {
       Rack::Lint.new(nil).call(env("SCRIPT_NAME" => "howdy"))
     }.should.raise(Rack::Lint::LintError).
       message.should.match(/must start with/)
