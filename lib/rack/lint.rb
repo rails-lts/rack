@@ -228,7 +228,7 @@ module Rack
       check_error env["rack.errors"]
 
       ## * The <tt>REQUEST_METHOD</tt> must be a valid token.
-      assert("REQUEST_METHOD unknown: #{env["REQUEST_METHOD"]}") {
+      assert("REQUEST_METHOD unknown: #{env["REQUEST_METHOD"].dump}") {
         env["REQUEST_METHOD"] =~ /\A[0-9A-Za-z!\#$%&'*+.^_`|~-]+\z/
       }
 
