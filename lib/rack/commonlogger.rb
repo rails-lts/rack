@@ -43,7 +43,7 @@ module Rack
       length = extract_content_length(header)
 
       logger = @logger || env['rack.errors']
-      logger.write FORMAT % [
+      msg = FORMAT % [
         env['HTTP_X_FORWARDED_FOR'] || env["REMOTE_ADDR"] || "-",
         env["REMOTE_USER"] || "-",
         now.strftime("%d/%b/%Y %H:%M:%S"),
@@ -54,6 +54,14 @@ module Rack
         status.to_s[0..3],
         length,
         now - began_at ]
+
+      if defined?("".ord)
+        msg.gsub!(/[^[:print:]\n]/) { |c| "\\x%02x" % [c.ord] }
+      else
+        msg.gsub!(/[^[:print:]\n]/) { |c| "\\x%02x" % [c[0]] }
+      end
+
+      logger.write(msg)
     end
 
     def extract_content_length(headers)
