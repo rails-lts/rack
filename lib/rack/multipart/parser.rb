@@ -137,10 +137,9 @@ module Rack
         if head =~ RFC2183
           filename = Hash[head.scan(DISPPARM)]['filename']
           filename = $1 if filename and filename =~ /^"(.*)"$/
-        elsif head =~ BROKEN_QUOTED
+        elsif head =~ BROKEN
           filename = $1
-        elsif head =~ BROKEN_UNQUOTED
-          filename = $1
+          filename = $1 if filename =~ /^"(.*)"$/
         end
 
         if filename && filename.scan(/%.?.?/).all? { |s| s =~ /%[0-9a-fA-F]{2}/ }
