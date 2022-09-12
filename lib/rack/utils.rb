@@ -56,7 +56,7 @@ module Rack
     end
     module_function :unescape
 
-    DEFAULT_SEP = /[&;] */n
+    DEFAULT_SEP = /& */n
 
     class << self
       attr_accessor :key_space_limit
