@@ -13,6 +13,8 @@ Rack applications should conform to.
 This is a fork of the official [rack gem](https://github.com/rack/rack) with
 backported security fixes for:
 
+*   [rack 2.2](https://github.com/rails-lts/rack/tree/lts-2-2-stable)
+    (CWE-444)
 *   [rack 1.6](https://github.com/rails-lts/rack/tree/lts-1-6-stable)
     (CVE-2020-8161, CVE-2020-8184, CVE-2022-30122, CVE-2022-30123, CWE-444)
 *   [rack 1.4](https://github.com/rails-lts/rack/tree/lts-rack-1.4)
