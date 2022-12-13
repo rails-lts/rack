@@ -13,6 +13,12 @@ Rack applications should conform to.
 
 ## LTS version
 
+### Deprecation notice
+
+This repository is no longer maintained, but is now part of [Rails LTS](https://railslts.com)
+
+### Info
+
 This is a fork of the official [rack gem](https://github.com/rack/rack) with
 backported security fixes for:
 
