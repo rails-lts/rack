@@ -271,13 +271,15 @@ describe Rack::Builder do
       end
     end
 
-    it "respects the frozen_string_literal magic comment" do
-      app, _ = Rack::Builder.parse_file(config_file('frozen.ru'))
-      response = Rack::MockRequest.new(app).get('/')
-      response.body.must_equal 'frozen'
-      body = response.instance_variable_get(:@body)
-      body.must_equal(['frozen'])
-      body[0].frozen?.must_equal true
+    if RUBY_VERSION >= '2.3'
+      it "respects the frozen_string_literal magic comment" do
+        app, _ = Rack::Builder.parse_file(config_file('frozen.ru'))
+        response = Rack::MockRequest.new(app).get('/')
+        response.body.must_equal 'frozen'
+        body = response.instance_variable_get(:@body)
+        body.must_equal(['frozen'])
+        body[0].frozen?.must_equal true
+      end
     end
   end
 

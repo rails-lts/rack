@@ -47,13 +47,15 @@ describe Rack::Session::Abstract::SessionHash do
     assert_equal [:bar, :qux, { y: 1 }], hash.values
   end
 
-  it "#dig operates like Hash#dig" do
-    assert_equal({ y: 1 }, hash.dig("x"))
-    assert_equal(1, hash.dig(:x, :y))
-    assert_nil(hash.dig(:z))
-    assert_nil(hash.dig(:x, :z))
-    lambda { hash.dig(:x, :y, :z) }.must_raise TypeError
-    lambda { hash.dig }.must_raise ArgumentError
+  if RUBY_VERSION >= '2.3'
+    it "#dig operates like Hash#dig" do
+      assert_equal({ y: 1 }, hash.dig("x"))
+      assert_equal(1, hash.dig(:x, :y))
+      assert_nil(hash.dig(:z))
+      assert_nil(hash.dig(:x, :z))
+      lambda { hash.dig(:x, :y, :z) }.must_raise TypeError
+      lambda { hash.dig }.must_raise ArgumentError
+    end
   end
 
   it "#each iterates over entries" do

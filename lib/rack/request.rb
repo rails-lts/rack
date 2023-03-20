@@ -572,8 +572,8 @@ module Rack
       end
 
       def parse_http_accept_header(header)
-        header.to_s.split(/\s*,\s*/).map do |part|
-          attribute, parameters = part.split(/\s*;\s*/, 2)
+        header.to_s.split(",").each(&:strip!).map do |part|
+          attribute, parameters = part.split(";", 2).each(&:strip!)
           quality = 1.0
           if parameters and /\Aq=([\d.]+)/ =~ parameters
             quality = $1.to_f
@@ -619,9 +619,9 @@ module Rack
       def split_authority(authority)
         if match = AUTHORITY.match(authority)
           if address = match[:ip6]
-            return match[:host], address, match[:port]&.to_i
+            return match[:host], address, (match[:port] && match[:port].to_i)
           else
-            return match[:host], match[:host], match[:port]&.to_i
+            return match[:host], match[:host], (match[:port] && match[:port].to_i)
           end
         end
 

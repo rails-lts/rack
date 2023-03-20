@@ -124,7 +124,7 @@ module Rack
       # no-transform set.
       if Utils::STATUS_WITH_NO_ENTITY_BODY.key?(status.to_i) ||
           /\bno-transform\b/.match?(headers['Cache-Control'].to_s) ||
-          headers['Content-Encoding']&.!~(/\bidentity\b/)
+          (headers['Content-Encoding'] && headers['Content-Encoding'] !~(/\bidentity\b/))
         return false
       end
 

@@ -345,7 +345,7 @@ describe Rack::MockResponse do
     # this is exactly what rack-test does
     body = StringIO.new("hi")
     res = Rack::MockResponse.new(200, {}, body)
-    body.close if body.respond_to?(:close)
+    body.close if body.respond_to?(:close) && !body.closed?
     res.body.must_equal 'hi'
   end
 

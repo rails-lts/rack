@@ -25,9 +25,9 @@ backported security fixes for:
 *   [rack 2.2](https://github.com/rails-lts/rack/tree/lts-2-2-stable)
     (CWE-444)
 *   [rack 1.6](https://github.com/rails-lts/rack/tree/lts-1-6-stable)
-    (CVE-2020-8161, CVE-2020-8184, CVE-2022-30122, CVE-2022-30123, CWE-444)
+    (CVE-2020-8161, CVE-2020-8184, CVE-2022-30122, CVE-2022-30123, CWE-444, CVE-2022-44570, CVE-2022-44571, CVE-2023-27530, CVE-2023-27539)
 *   [rack 1.4](https://github.com/rails-lts/rack/tree/lts-rack-1.4)
-    (CVE-2018-16471, CVE-2020-8161, CVE-2020-8184, CVE-2022-30122, CVE-2022-30123, CWE-444, CWE-290)
+    (CVE-2018-16471, CVE-2020-8161, CVE-2020-8184, CVE-2022-30122, CVE-2022-30123, CWE-444, CWE-290, CVE-2022-44570, CVE-2022-44571, CVE-2023-27530, CVE-2023-27539)
 
 
 To use it, you need to add it to the Gemfile like this:

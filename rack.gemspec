@@ -9,12 +9,12 @@ Gem::Specification.new do |s|
   s.summary = "A modular Ruby webserver interface."
   s.license = "MIT"
 
-  s.description = <<~EOF
-    Rack provides a minimal, modular and adaptable interface for developing
-    web applications in Ruby. By wrapping HTTP requests and responses in
-    the simplest way possible, it unifies and distills the API for web
-    servers, web frameworks, and software in between (the so-called
-    middleware) into a single method call.
+  s.description = <<-EOF
+Rack provides a minimal, modular and adaptable interface for developing
+web applications in Ruby. By wrapping HTTP requests and responses in
+the simplest way possible, it unifies and distills the API for web
+servers, web frameworks, and software in between (the so-called
+middleware) into a single method call.
   EOF
 
   s.files = Dir['{bin/*,contrib/*,example/*,lib/**/*}'] +
@@ -30,7 +30,7 @@ Gem::Specification.new do |s|
 
   s.homepage = 'https://github.com/rack/rack'
 
-  s.required_ruby_version = '>= 2.3.0'
+  s.required_ruby_version = '>= 2.2.0'
 
   s.metadata = {
     "bug_tracker_uri" => "https://github.com/rack/rack/issues",

@@ -54,6 +54,7 @@ describe Rack::Directory do
   end
 
   it "return 404 for unreadable directories" do
+    skip 'Cannot test this in our docker setup'
     begin
       File.write('test/cgi/unreadable', '')
       File.chmod(0, 'test/cgi/unreadable')

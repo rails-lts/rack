@@ -250,7 +250,7 @@ describe Rack::Server do
         require 'objspace'
       rescue LoadError
       else
-        t = Tempfile.new
+        t = Tempfile.new('heapfile')
         begin
           SPEC_ARGV[0..-1] = ['-scgi', '--heap', t.path, '-E', 'production', '-b', 'run ->(env){[200, {}, []]}']
           server = Rack::Server.new
@@ -271,7 +271,7 @@ describe Rack::Server do
         require 'stackprof'
       rescue LoadError
       else
-        t = Tempfile.new
+        t = Tempfile.new('profilefile')
         begin
           SPEC_ARGV[0..-1] = ['-scgi', '--profile', t.path, '--profile-mode', 'cpu', '-E', 'production', '-b', 'run ->(env){[200, {}, []]}']
           server = Rack::Server.new

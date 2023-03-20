@@ -84,9 +84,11 @@ module Rack
           @data[key.to_s]
         end
 
-        def dig(key, *keys)
-          load_for_read!
-          @data.dig(key.to_s, *keys)
+        if Hash.method_defined?(:dig)
+          def dig(key, *keys)
+            load_for_read!
+            @data.dig(key.to_s, *keys)
+          end
         end
 
         def fetch(key, default = Unspecified, &block)

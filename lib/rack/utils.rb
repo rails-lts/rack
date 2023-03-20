@@ -58,13 +58,24 @@ module Rack
     end
 
     class << self
-      attr_accessor :multipart_part_limit
+      attr_accessor :multipart_total_part_limit
+
+      attr_accessor :multipart_file_limit
+
+      # multipart_part_limit is the original name of multipart_file_limit, but
+      # the limit only counts parts with filenames.
+      alias multipart_part_limit multipart_file_limit
+      alias multipart_part_limit= multipart_file_limit=
     end
 
-    # The maximum number of parts a request can contain. Accepting too many part
-    # can lead to the server running out of file handles.
+    # The maximum number of file parts a request can contain. Accepting too
+    # many parts can lead to the server running out of file handles.
     # Set to `0` for no limit.
-    self.multipart_part_limit = (ENV['RACK_MULTIPART_PART_LIMIT'] || 128).to_i
+    self.multipart_file_limit = (ENV['RACK_MULTIPART_PART_LIMIT'] || ENV['RACK_MULTIPART_FILE_LIMIT'] || 128).to_i
+
+    # The maximum total number of parts a request can contain. Accepting too
+    # many can lead to excessive memory use and parsing time.
+    self.multipart_total_part_limit = (ENV['RACK_MULTIPART_TOTAL_PART_LIMIT'] || 4096).to_i
 
     def self.param_depth_limit
       default_query_parser.param_depth_limit
@@ -131,7 +142,7 @@ module Rack
     end
 
     def q_values(q_value_header)
-      q_value_header.to_s.split(/\s*,\s*/).map do |part|
+      q_value_header.to_s.split(",").each(&:strip!).map do |part|
         value, parameters = part.split(/\s*;\s*/, 2)
         quality = 1.0
         if parameters && (md = /\Aq=([\d.]+)/.match(parameters))
@@ -348,17 +359,18 @@ module Rack
       return nil unless http_range && http_range =~ /bytes=([^;]+)/
       ranges = []
       $1.split(/,\s*/).each do |range_spec|
-        return nil  unless range_spec =~ /(\d*)-(\d*)/
-        r0, r1 = $1, $2
-        if r0.empty?
-          return nil  if r1.empty?
+        return nil unless range_spec.include?('-')
+        range = range_spec.split('-')
+        r0, r1 = range[0], range[1]
+        if r0.nil? || r0.empty?
+          return nil if r1.nil?
           # suffix-byte-range-spec, represents trailing suffix of file
           r0 = size - r1.to_i
           r0 = 0  if r0 < 0
           r1 = size - 1
         else
           r0 = r0.to_i
-          if r1.empty?
+          if r1.nil?
             r1 = size - 1
           else
             r1 = r1.to_i

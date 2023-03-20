@@ -410,6 +410,11 @@ describe Rack::Utils do
 
     # When there are no matches, return nil:
     Rack::Utils.best_q_match("application/json", %w[text/html text/plain]).must_be_nil
+
+    # Avoids DoS
+    Timeout.timeout(0.01) do
+      Rack::Utils.best_q_match(" " * 10000 + "a,", %w[text/html])
+    end
   end
 
   it "escape html entities [&><'\"/]" do
