@@ -265,7 +265,14 @@ module Rack
         end
       end
 
-      server.run wrapped_app, options, &blk
+      if RUBY_VERSION >= '3'
+        # need to hide this in an eval, since it is not valid 1.8.7 syntax
+        eval <<-RUBY
+          server.run wrapped_app, **options, &blk
+        RUBY
+      else
+        server.run wrapped_app, options, &blk
+      end
     end
 
     def server

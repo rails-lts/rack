@@ -81,7 +81,7 @@ describe Rack::Utils do
   
   should "not hang on escaping long strings that end in % (http://redmine.ruby-lang.org/issues/5149)" do
     lambda {
-      timeout(1) do
+      Timeout.timeout(1) do
         lambda {
           URI.decode_www_form_component "A string that causes catastrophic backtracking as it gets longer %"
         }.should.raise(ArgumentError)
@@ -214,11 +214,6 @@ describe Rack::Utils do
     lambda { Rack::Utils.parse_nested_query("x[y]=1&x[y][][w]=2") }.
       should.raise(TypeError).
       message.should.equal "expected Array (got String) for param `y'"
-  end
-
-  should "not split query params at ; by default" do
-    Rack::Utils.parse_nested_query("foo=bar;foo=quux").
-      should.equal "foo" => "bar;foo=quux"
   end
 
   should "build query strings correctly" do

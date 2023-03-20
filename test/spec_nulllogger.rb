@@ -1,11 +1,8 @@
-require 'enumerator'
 require 'rack/lint'
 require 'rack/mock'
 require 'rack/nulllogger'
 
 describe Rack::NullLogger do
-  ::Enumerator = ::Enumerable::Enumerator unless Object.const_defined?(:Enumerator)
-  
   should "act as a noop logger" do
     app = lambda { |env|
       env['rack.logger'].warn "b00m"
@@ -18,6 +15,6 @@ describe Rack::NullLogger do
     res[0..1].should.equal [
       200, {'Content-Type' => 'text/plain'}
     ]
-    Enumerator.new(res[2]).to_a.should.equal ["Hello, World!"]
+    res[2].to_enum.to_a.should.equal ["Hello, World!"]
   end
 end

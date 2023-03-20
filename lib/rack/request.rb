@@ -303,8 +303,8 @@ module Rack
     end
 
     def accept_encoding
-      @env["HTTP_ACCEPT_ENCODING"].to_s.split(/\s*,\s*/).map do |part|
-        encoding, parameters = part.split(/\s*;\s*/, 2)
+      @env["HTTP_ACCEPT_ENCODING"].to_s.split(",").each(&:strip!).map do |part|
+        encoding, parameters = part.split(";", 2).each(&:strip!)
         quality = 1.0
         if parameters and /\Aq=([\d.]+)/ =~ parameters
           quality = $1.to_f
@@ -325,6 +325,11 @@ module Rack
 
       forwarded_ips = @env['HTTP_X_FORWARDED_FOR'] ? @env['HTTP_X_FORWARDED_FOR'].strip.split(/[,\s]+/) : []
 
+      if client_ip = @env['HTTP_CLIENT_IP']
+        # If forwarded_ips doesn't include the client_ip, it might be an
+        # ip spoofing attempt, so we ignore HTTP_CLIENT_IP
+        return client_ip if forwarded_ips.include?(client_ip)
+      end
 
       return forwarded_ips.reject { |ip| trusted_proxy?(ip) }.last || @env["REMOTE_ADDR"]
     end

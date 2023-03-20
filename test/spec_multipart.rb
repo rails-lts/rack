@@ -403,6 +403,37 @@ Content-Type: image/jpeg\r
     end
   end
 
+  should "reach a multipart total limit" do
+    begin
+      previous_limit = Rack::Utils.multipart_total_part_limit
+      Rack::Utils.multipart_total_part_limit = 5
+
+      env = Rack::MockRequest.env_for '/', multipart_fixture(:three_files_three_fields)
+      lambda { Rack::Multipart.parse_multipart(env) }.should.raise(Rack::Multipart::MultipartTotalPartLimitError)
+    ensure
+      Rack::Utils.multipart_total_part_limit = previous_limit
+    end
+  end
+
+  should "close tempfiles when reaching a limit" do
+    begin
+      previous_limit = Rack::Utils.multipart_total_part_limit
+      Rack::Utils.multipart_total_part_limit = 5
+
+      env = Rack::MockRequest.env_for '/', multipart_fixture(:three_files_three_fields)
+      Rack::Multipart.parse_multipart(env)
+    rescue Rack::Multipart::MultipartTotalPartLimitError
+      # ignore
+    ensure
+      Rack::Utils.multipart_total_part_limit = previous_limit
+      tempfiles = env['rack.tempfiles']
+      tempfiles.size.should > 0
+      tempfiles.each do |tempfile|
+        tempfile.closed?.should.equal true
+      end
+    end
+  end
+
   should "return nil if no UploadedFiles were used" do
     data = Rack::Multipart.build_multipart("people" => [{"submit-name" => "Larry", "files" => "contents"}])
     data.should.equal nil

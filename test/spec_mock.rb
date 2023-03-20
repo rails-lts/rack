@@ -19,6 +19,14 @@ app = Rack::Lint.new(lambda { |env|
 })
 
 describe Rack::MockRequest do
+  def unsafe_load(yaml)
+    if YAML.respond_to?(:unsafe_load)
+      YAML.unsafe_load(yaml)
+    else
+      YAML.load(yaml)
+    end
+  end
+
   should "return a MockResponse" do
     res = Rack::MockRequest.new(app).get("")
     res.should.be.kind_of Rack::MockResponse
@@ -33,7 +41,7 @@ describe Rack::MockRequest do
   should "provide sensible defaults" do
     res = Rack::MockRequest.new(app).request
 
-    env = YAML.load(res.body)
+    env = unsafe_load(res.body)
     env["REQUEST_METHOD"].should.equal "GET"
     env["SERVER_NAME"].should.equal "example.org"
     env["SERVER_PORT"].should.equal "80"
@@ -46,23 +54,23 @@ describe Rack::MockRequest do
 
   should "allow GET/POST/PUT/DELETE/HEAD" do
     res = Rack::MockRequest.new(app).get("", :input => "foo")
-    env = YAML.load(res.body)
+    env = unsafe_load(res.body)
     env["REQUEST_METHOD"].should.equal "GET"
 
     res = Rack::MockRequest.new(app).post("", :input => "foo")
-    env = YAML.load(res.body)
+    env = unsafe_load(res.body)
     env["REQUEST_METHOD"].should.equal "POST"
 
     res = Rack::MockRequest.new(app).put("", :input => "foo")
-    env = YAML.load(res.body)
+    env = unsafe_load(res.body)
     env["REQUEST_METHOD"].should.equal "PUT"
 
     res = Rack::MockRequest.new(app).patch("", :input => "foo")
-    env = YAML.load(res.body)
+    env = unsafe_load(res.body)
     env["REQUEST_METHOD"].should.equal "PATCH"
 
     res = Rack::MockRequest.new(app).delete("", :input => "foo")
-    env = YAML.load(res.body)
+    env = unsafe_load(res.body)
     env["REQUEST_METHOD"].should.equal "DELETE"
     
     Rack::MockRequest.env_for("/", :method => "HEAD")["REQUEST_METHOD"].
@@ -79,11 +87,11 @@ describe Rack::MockRequest do
 
   should "allow posting" do
     res = Rack::MockRequest.new(app).get("", :input => "foo")
-    env = YAML.load(res.body)
+    env = unsafe_load(res.body)
     env["mock.postdata"].should.equal "foo"
 
     res = Rack::MockRequest.new(app).post("", :input => StringIO.new("foo"))
-    env = YAML.load(res.body)
+    env = unsafe_load(res.body)
     env["mock.postdata"].should.equal "foo"
   end
 
@@ -92,7 +100,7 @@ describe Rack::MockRequest do
       get("https://bla.example.org:9292/meh/foo?bar")
     res.should.be.kind_of Rack::MockResponse
 
-    env = YAML.load(res.body)
+    env = unsafe_load(res.body)
     env["REQUEST_METHOD"].should.equal "GET"
     env["SERVER_NAME"].should.equal "bla.example.org"
     env["SERVER_PORT"].should.equal "9292"
@@ -106,7 +114,7 @@ describe Rack::MockRequest do
       get("https://example.org/foo")
     res.should.be.kind_of Rack::MockResponse
 
-    env = YAML.load(res.body)
+    env = unsafe_load(res.body)
     env["REQUEST_METHOD"].should.equal "GET"
     env["SERVER_NAME"].should.equal "example.org"
     env["SERVER_PORT"].should.equal "443"
@@ -121,7 +129,7 @@ describe Rack::MockRequest do
       get("foo")
     res.should.be.kind_of Rack::MockResponse
 
-    env = YAML.load(res.body)
+    env = unsafe_load(res.body)
     env["REQUEST_METHOD"].should.equal "GET"
     env["SERVER_NAME"].should.equal "example.org"
     env["SERVER_PORT"].should.equal "80"
@@ -132,13 +140,13 @@ describe Rack::MockRequest do
 
   should "properly convert method name to an uppercase string" do
     res = Rack::MockRequest.new(app).request(:get)
-    env = YAML.load(res.body)
+    env = unsafe_load(res.body)
     env["REQUEST_METHOD"].should.equal "GET"
   end
 
   should "accept params and build query string for GET requests" do
     res = Rack::MockRequest.new(app).get("/foo?baz=2", :params => {:foo => {:bar => "1"}})
-    env = YAML.load(res.body)
+    env = unsafe_load(res.body)
     env["REQUEST_METHOD"].should.equal "GET"
     env["QUERY_STRING"].should.include "baz=2"
     env["QUERY_STRING"].should.include "foo[bar]=1"
@@ -148,7 +156,7 @@ describe Rack::MockRequest do
 
   should "accept raw input in params for GET requests" do
     res = Rack::MockRequest.new(app).get("/foo?baz=2", :params => "foo[bar]=1")
-    env = YAML.load(res.body)
+    env = unsafe_load(res.body)
     env["REQUEST_METHOD"].should.equal "GET"
     env["QUERY_STRING"].should.include "baz=2"
     env["QUERY_STRING"].should.include "foo[bar]=1"
@@ -158,7 +166,7 @@ describe Rack::MockRequest do
 
   should "accept params and build url encoded params for POST requests" do
     res = Rack::MockRequest.new(app).post("/foo", :params => {:foo => {:bar => "1"}})
-    env = YAML.load(res.body)
+    env = unsafe_load(res.body)
     env["REQUEST_METHOD"].should.equal "POST"
     env["QUERY_STRING"].should.equal ""
     env["PATH_INFO"].should.equal "/foo"
@@ -168,7 +176,7 @@ describe Rack::MockRequest do
 
   should "accept raw input in params for POST requests" do
     res = Rack::MockRequest.new(app).post("/foo", :params => "foo[bar]=1")
-    env = YAML.load(res.body)
+    env = unsafe_load(res.body)
     env["REQUEST_METHOD"].should.equal "POST"
     env["QUERY_STRING"].should.equal ""
     env["PATH_INFO"].should.equal "/foo"
@@ -179,7 +187,7 @@ describe Rack::MockRequest do
   should "accept params and build multipart encoded params for POST requests" do
     files = Rack::Multipart::UploadedFile.new(File.join(File.dirname(__FILE__), "multipart", "file1.txt"))
     res = Rack::MockRequest.new(app).post("/foo", :params => { "submit-name" => "Larry", "files" => files })
-    env = YAML.load(res.body)
+    env = unsafe_load(res.body)
     env["REQUEST_METHOD"].should.equal "POST"
     env["QUERY_STRING"].should.equal ""
     env["PATH_INFO"].should.equal "/foo"

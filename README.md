@@ -20,11 +20,11 @@ This is a fork of the official [rack gem](https://github.com/rack/rack) with
 backported security fixes for:
 
 *   [rack 2.2](https://github.com/rails-lts/rack/tree/lts-2-2-stable)
-    (CWE-444)
+    (CWE-444, CVE-2022-44570, CVE-2022-44571, CVE-2023-27530, CVE-2023-27539)
 *   [rack 1.6](https://github.com/rails-lts/rack/tree/lts-1-6-stable)
-    (CVE-2020-8161, CVE-2020-8184, CVE-2022-30122, CVE-2022-30123, CWE-444)
+    (CVE-2020-8161, CVE-2020-8184, CVE-2022-30122, CVE-2022-30123, CWE-444, CVE-2022-44570, CVE-2022-44571, CVE-2023-27530, CVE-2023-27539)
 *   [rack 1.4](https://github.com/rails-lts/rack/tree/lts-rack-1.4)
-    (CVE-2018-16471, CVE-2020-8161, CVE-2020-8184, CVE-2022-30122, CVE-2022-30123, CWE-444, CWE-290)
+    (CVE-2018-16471, CVE-2020-8161, CVE-2020-8184, CVE-2022-30122, CVE-2022-30123, CWE-444, CWE-290, CVE-2022-44570, CVE-2022-44571, CVE-2023-27530, CVE-2023-27539)
 
 
 To use it, you need to add it to the Gemfile like this:
@@ -209,6 +209,48 @@ Installing the Ruby fcgi gem:
 
 Furthermore, to test Memcache sessions, you need memcached (will be run on
 port 11211) and memcache-client installed.
+
+## Configuration
+
+Several parameters can be modified on Rack::Utils to configure Rack behaviour.
+
+e.g:
+
+    Rack::Utils.key_space_limit = 128
+
+### key_space_limit
+
+The default number of bytes to allow a single parameter key to take up. This
+helps prevent a rogue client from flooding a Request.
+
+Default to 65536 characters (4 kiB in worst case).
+
+### multipart_file_limit
+
+The maximum number of parts with a filename a request can contain. Accepting too many part can
+lead to the server running out of file handles.
+
+The default is 128, which means that a single request can't upload more than
+128 files at once.
+
+Set to 0 for no limit.
+
+Can also be set via the `RACK_MULTIPART_PART_LIMIT` environment variable.
+
+(This is also aliased as `multipart_part_limit` and `RACK_MULTIPART_PART_LIMIT` for compatibility)
+
+### multipart_total_part_limit
+
+The maximum total number of parts a request can contain of any type, including
+both file and non-file form fields.
+
+The default is 4096, which means that a single request can't contain more than
+4096 parts.
+
+Set to 0 for no limit.
+
+Can also be set via the `RACK_MULTIPART_TOTAL_PART_LIMIT` environment variable.
+
 
 ## History
 

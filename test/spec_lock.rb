@@ -1,4 +1,3 @@
-require 'enumerator'
 require 'rack/lint'
 require 'rack/lock'
 require 'rack/mock'
@@ -36,8 +35,6 @@ module LockHelpers
 end
 
 describe Rack::Lock do
-  ::Enumerator = ::Enumerable::Enumerator unless Object.const_defined?(:Enumerator)
-  
   extend LockHelpers
   
   describe 'Proxy' do
@@ -119,7 +116,7 @@ describe Rack::Lock do
     res = app.call(env)
     res[0].should.equal body[0]
     res[1].should.equal body[1]
-    Enumerator.new(res[2]).to_a.should.equal ["hi", "mom"]
+    res[2].to_enum.to_a.should.equal ["hi", "mom"]
   end
 
   should "call synchronize on lock" do

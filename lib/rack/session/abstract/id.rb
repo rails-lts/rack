@@ -227,7 +227,7 @@ module Rack
           if secure
             SecureRandom.hex(@sid_length)
           else
-            "%0#{@sid_length}x" % Kernel.rand(2**@sidbits - 1)
+            "%0#{@sid_length}x" % Kernel.rand(1 << @sidbits)
           end
         rescue NotImplementedError
           generate_sid(false)

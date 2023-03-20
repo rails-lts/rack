@@ -3,6 +3,7 @@ require 'rack/utils'
 module Rack
   module Multipart
     class MultipartLimitError < Errno::EMFILE; end
+    class MultipartTotalPartLimitError < StandardError; end
 
     class Parser
       BUFSIZE = 16384
@@ -17,14 +18,25 @@ module Rack
         fast_forward_to_first_boundary
 
         opened_files = 0
+        parts = 0
         loop do
-
           head, filename, content_type, name, body =
             get_current_head_and_filename_and_content_type_and_name_and_body
 
           if Utils.multipart_part_limit > 0
             opened_files += 1 if filename
-            raise MultipartLimitError, 'Maximum file multiparts in content reached' if opened_files >= Utils.multipart_part_limit
+            if opened_files >= Utils.multipart_part_limit
+              close_tempfiles
+              raise MultipartLimitError, 'Maximum file multiparts in content reached'
+            end
+          end
+
+          if Utils.multipart_total_part_limit > 0
+            parts += 1
+            if parts >= Utils.multipart_total_part_limit
+              close_tempfiles
+              raise MultipartTotalPartLimitError, 'Maximum total multiparts in content reached' 
+            end
           end
 
           # Save the rest.
@@ -111,6 +123,7 @@ module Rack
 
             if filename
               body = Tempfile.new("RackMultipart")
+              (@env['rack.tempfiles'] ||= []) << body
               body.binmode  if body.respond_to?(:binmode)
             end
 
@@ -149,6 +162,10 @@ module Rack
           filename = filename.gsub(/\\(.)/, '\1')
         end
         filename
+      end
+
+      def close_tempfiles
+        (@env['rack.tempfiles'] || []).each(&:close!)
       end
 
       def get_data(filename, body, content_type, name, head)

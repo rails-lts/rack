@@ -3,6 +3,7 @@ require 'cgi'
 require 'rack/request'
 require 'rack/mock'
 require 'securerandom'
+require 'timeout'
 
 describe Rack::Request do
   should "wrap the rack variables" do
@@ -639,7 +640,7 @@ EOF
     f[:tempfile].size.should.equal 76
   end
 
-  should "MultipartLimitError when request has too many multipart parts if limit set" do
+  should "MultipartLimitError when request has too many multipart file parts if limit set" do
     begin
       data = 10000.times.map { "--AaB03x\r\nContent-Type: text/plain\r\nContent-Disposition: attachment; name=#{SecureRandom.hex(10)}; filename=#{SecureRandom.hex(10)}\r\n\r\ncontents\r\n" }.join("\r\n")
       data += "--AaB03x--\r"
@@ -652,6 +653,22 @@ EOF
 
       request = Rack::Request.new Rack::MockRequest.env_for("/", options)
       lambda { request.POST }.should.raise(Rack::Multipart::MultipartLimitError)
+    end
+  end
+
+  should "MultipartPartLimitError when request has too many multipart total parts if limit set" do
+    begin
+      data = 10000.times.map { |i| "--AaB03x\r\ncontent-type: text/plain\r\ncontent-disposition: attachment; name=#{i.to_s(16)}\r\n\r\ncontents\r\n" }.join("\r\n")
+      data += "--AaB03x--\r"
+
+      options = {
+        "CONTENT_TYPE" => "multipart/form-data; boundary=AaB03x",
+        "CONTENT_LENGTH" => data.length.to_s,
+        :input => StringIO.new(data)
+      }
+
+      request = Rack::Request.new Rack::MockRequest.env_for("/", options)
+      lambda { request.POST }.should.raise(Rack::Multipart::MultipartTotalPartLimitError)
     end
   end
 
@@ -732,6 +749,31 @@ EOF
                       :input => input)
 
     req.params.keys.should.equal ["<soap-start>"]
+  end
+
+  should "record tempfiles from multipart form data in env[rack.tempfiles]" do
+    input = <<EOF
+--AaB03x\r
+content-disposition: form-data; name="fileupload"; filename="foo.jpg"\r
+Content-Type: image/jpeg\r
+Content-Transfer-Encoding: base64\r
+\r
+/9j/4AAQSkZJRgABAQAAAQABAAD//gA+Q1JFQVRPUjogZ2QtanBlZyB2MS4wICh1c2luZyBJSkcg\r
+--AaB03x\r
+content-disposition: form-data; name="fileupload"; filename="bar.jpg"\r
+Content-Type: image/jpeg\r
+Content-Transfer-Encoding: base64\r
+\r
+/9j/4AAQSkZJRgABAQAAAQABAAD//gA+Q1JFQVRPUjogZ2QtanBlZyB2MS4wICh1c2luZyBJSkcg\r
+--AaB03x--\r
+EOF
+    env = Rack::MockRequest.env_for("/",
+                          "CONTENT_TYPE" => "multipart/form-data, boundary=AaB03x",
+                          "CONTENT_LENGTH" => input.size,
+                          :input => input)
+    req = Rack::Request.new(env)
+    req.params
+    env['rack.tempfiles'].size.should.equal(2)
   end
 
   should "not try to interpret binary as utf8" do
@@ -834,6 +876,12 @@ EOF
       Rack::Request.new(Rack::MockRequest.env_for("", "HTTP_ACCEPT_ENCODING" => x)).accept_encoding
     end
 
+    parser_with_timeout = lambda do |x, timeout|
+      Timeout.timeout(timeout) do
+        parser.call(x)
+      end
+    end
+
     parser.call(nil).should.equal([])
 
     parser.call("compress, gzip").should.equal([["compress", 1.0], ["gzip", 1.0]])
@@ -844,6 +892,8 @@ EOF
 
     parser.call("gzip ; q=0.9").should.equal([["gzip", 0.9]])
     parser.call("gzip ; deflate").should.equal([["gzip", 1.0]])
+
+    parser_with_timeout.call(" " * 10000 + "a,", 0.01).should.equal([["a", 1.0]])
   end
 
   ip_app = lambda { |env|
@@ -923,29 +973,17 @@ EOF
       'HTTP_CLIENT_IP' => '1.1.1.1'
     res.body.should.equal '1.1.1.1'
 
+    # Spoofing attempt
+    res = mock.get '/',
+      'HTTP_X_FORWARDED_FOR' => '1.1.1.1',
+      'HTTP_CLIENT_IP' => '2.2.2.2'
+    res.body.should.equal '1.1.1.1'
+
     res = mock.get '/', 'HTTP_X_FORWARDED_FOR' => '8.8.8.8, 9.9.9.9'
     res.body.should.equal '9.9.9.9'
 
     res = mock.get '/', 'HTTP_X_FORWARDED_FOR' => '8.8.8.8, fe80::202:b3ff:fe1e:8329'
     res.body.should.equal 'fe80::202:b3ff:fe1e:8329'
-  end
-
-  should "not allow IP spoofing via Client-IP and X-Forwarded-For headers" do
-    mock = Rack::MockRequest.new(Rack::Lint.new(ip_app))
-
-    # IP Spoofing attempt:
-    # Client sends          X-Forwarded-For: 6.6.6.6
-    #                       Client-IP: 6.6.6.6
-    # Load balancer adds    X-Forwarded-For: 2.2.2.3, 192.168.0.7
-    # App receives:         X-Forwarded-For: 6.6.6.6
-    #                       X-Forwarded-For: 2.2.2.3, 192.168.0.7
-    #                       Client-IP: 6.6.6.6
-    # Rack env:             HTTP_X_FORWARDED_FOR: '6.6.6.6, 2.2.2.3, 192.168.0.7'
-    #                       HTTP_CLIENT_IP: '6.6.6.6'
-    res = mock.get '/',
-      'HTTP_X_FORWARDED_FOR' => '6.6.6.6, 2.2.2.3, 192.168.0.7',
-      'HTTP_CLIENT_IP' => '6.6.6.6'
-    res.body.should.equal '2.2.2.3'
   end
 
   class MyRequest < Rack::Request

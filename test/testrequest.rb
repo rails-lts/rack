@@ -58,7 +58,11 @@ class TestRequest
         post.basic_auth user, passwd  if user && passwd
         http.request(post) { |response|
           @status = response.code.to_i
-          @response = YAML.load(response.body)
+          @response = if YAML.respond_to(:unsafe_load)
+            YAML.unsafe_load(response.body)
+          else
+            YAML.load(response.body)
+          end
         }
       }
     end
