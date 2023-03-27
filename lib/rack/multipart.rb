@@ -17,7 +17,7 @@ module Rack
     VALUE = /"(?:\\"|[^"])*"|#{TOKEN}/
     BROKEN = /^#{CONDISP}.*;\s*filename=(#{VALUE})/i
     MULTIPART_CONTENT_TYPE = /Content-Type: (.*)#{EOL}/ni
-    MULTIPART_CONTENT_DISPOSITION = /Content-Disposition:[^:]*\s+name="?([^\";]*)"?/ni
+    MULTIPART_CONTENT_DISPOSITION = /Content-Disposition:[^:]*;\s+name="?([^\";]*)"?/ni
     MULTIPART_CONTENT_ID = /Content-ID:\s*([^#{EOL}]*)/ni
 
     class << self
