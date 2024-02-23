@@ -367,6 +367,10 @@ describe Rack::Utils do
 end
 
 describe Rack::Utils, "byte_range" do
+  should "return an empty list if the sum of  the byte ranges is too large" do
+    Rack::Utils.byte_ranges({ "HTTP_RANGE" => "bytes=0-20,0-500" }, 500).should.equal []
+  end
+
   should "ignore missing or syntactically invalid byte ranges" do
     Rack::Utils.byte_ranges({},500).should.equal nil
     Rack::Utils.byte_ranges({"HTTP_RANGE" => "foobar"},500).should.equal nil
@@ -501,6 +505,18 @@ describe Rack::Utils::HeaderHash do
     h['foo']
     h['foo'].should.be.nil
     h.should.not.include 'foo'
+  end
+
+  should "be constructable via [key, value]" do
+    h = Rack::Utils::HeaderHash['foo', 'bar']
+    h['foo'].should.equal('bar')
+    h['FOO'].should.equal('bar')
+  end
+
+  should "be constructable via [{key: value}]" do
+    h = Rack::Utils::HeaderHash[{'foo' => 'bar'}]
+    h['foo'].should.equal('bar')
+    h['FOO'].should.equal('bar')
   end
 end
 

@@ -2,6 +2,7 @@ require 'yaml'
 require 'rack/lint'
 require 'rack/mock'
 require 'stringio'
+require 'active_support/version_switches'
 
 app = Rack::Lint.new(lambda { |env|
   req = Rack::Request.new(env)
@@ -20,11 +21,7 @@ app = Rack::Lint.new(lambda { |env|
 
 describe Rack::MockRequest do
   def unsafe_load(yaml)
-    if YAML.respond_to?(:unsafe_load)
-      YAML.unsafe_load(yaml)
-    else
-      YAML.load(yaml)
-    end
+    RailsLts::Support::YAML.legacy_load(yaml)
   end
 
   should "return a MockResponse" do
