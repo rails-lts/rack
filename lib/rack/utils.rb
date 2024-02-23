@@ -381,7 +381,8 @@ module Rack
         ranges << (r0..r1)  if r0 <= r1
       end
 
-      return [] if ranges.map(&:size).sum > size
+      total_size = ranges.reduce(0) { |sum, range| sum + range.size }
+      return [] if total_size > size
 
       ranges
     end
