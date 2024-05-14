@@ -1,4 +1,5 @@
 require 'rack/mock'
+require 'rack/handler/webrick'
 require File.expand_path('../testrequest', __FILE__)
 
 Thread.abort_on_exception = true
