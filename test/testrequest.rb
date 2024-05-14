@@ -1,6 +1,7 @@
 require 'yaml'
 require 'net/http'
 require 'rack/lint'
+require 'active_support/version_switches'
 
 class TestRequest
   NOSERIALIZE = [Method, Proc, Rack::Lint::InputWrapper]
@@ -40,7 +41,7 @@ class TestRequest
         http.request(get) { |response|
           @status = response.code.to_i
           begin
-            @response = YAML.load(response.body)
+            @response = RailsLts::Support::YAML.legacy_load(response.body)
           rescue TypeError, ArgumentError
             @response = nil
           end
@@ -58,7 +59,7 @@ class TestRequest
         post.basic_auth user, passwd  if user && passwd
         http.request(post) { |response|
           @status = response.code.to_i
-          @response = YAML.load(response.body)
+          @response = RailsLts::Support::YAML.legacy_load(response.body)
         }
       }
     end

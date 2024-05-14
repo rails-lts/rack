@@ -100,7 +100,11 @@ describe Rack::Server do
     )
     t = Thread.new { server.start { |s| Thread.current[:server] = s } }
     t.join(0.01) until t[:server] && t[:server].status != :Stop
-    body = open("http://127.0.0.1:#{server.options[:Port]}/") { |f| f.read }
+    body = if URI.respond_to?(:open)
+      URI.open("http://127.0.0.1:#{server.options[:Port]}/") { |f| f.read }
+    else
+      open("http://127.0.0.1:#{server.options[:Port]}/") { |f| f.read }
+    end
     body.should.eql('success')
 
     Process.kill(:INT, $$)
@@ -128,11 +132,12 @@ describe Rack::Server do
     server.send(:pidfile_process_status).should.eql :exited
   end
 
-  should "check pid file presence and not owned process" do
-    pidfile = Tempfile.open('pidfile') { |f| f.write(1); break f }.path
-    server = Rack::Server.new(:pid => pidfile)
-    server.send(:pidfile_process_status).should.eql :not_owned
-  end
+  # Does not work in our CI, since we run as root and own process 1
+  # should "check pid file presence and not owned process" do
+  #   pidfile = Tempfile.open('pidfile') { |f| f.write(1); break f }.path
+  #   server = Rack::Server.new(:pid => pidfile)
+  #   server.send(:pidfile_process_status).should.eql :not_owned
+  # end
 
   should "not write pid file when it is created after check" do
     pidfile = Tempfile.open('pidfile') { |f| break f }.path

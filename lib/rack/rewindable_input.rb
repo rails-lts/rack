@@ -59,10 +59,12 @@ module Rack
 
     # Ruby's Tempfile class has a bug. Subclass it and fix it.
     class Tempfile < ::Tempfile
-      def _close
-        @tmpfile.close if @tmpfile
-        @data[1] = nil if @data
-        @tmpfile = nil
+      if RUBY_VERSION < '3'
+        def _close
+          @tmpfile.close if @tmpfile
+          @data[1] = nil if @data
+          @tmpfile = nil
+        end
       end
     end
 

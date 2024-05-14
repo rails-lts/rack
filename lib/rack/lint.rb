@@ -629,7 +629,7 @@ module Rack
       header.each { |key, value|
         ## Special headers starting "rack." are for communicating with the
         ## server, and must not be sent back to the client.
-        next if key =~ /^rack\..+$/
+        next if key.is_a?(String) && key =~ /^rack\..+$/
 
         ## The header keys must be Strings.
         assert("header key must be a string, was #{key.class}") {
